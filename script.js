@@ -261,10 +261,10 @@ function initSticksPulse() {
         
         setTimeout(() => {
             randomStick.classList.remove('pulse');
-        }, 2000);
+        }, 1000);
         
         // Next pulse at random interval
-        const nextDelay = 2000 + Math.random() * 3000;
+        const nextDelay = 1000 + Math.random() * 2000;
         setTimeout(randomPulse, nextDelay);
     }
     

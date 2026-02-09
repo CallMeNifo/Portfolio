@@ -846,7 +846,7 @@ img {
     color: var(--text-tertiary);
 }
 
-/* Floating Elements */
+/* Floating Elemens */
 .floating-elements {
     position: absolute;
     right: 80px;
@@ -870,7 +870,7 @@ img {
 
 .stick.pulse {
     background: linear-gradient(135deg, 
-        rgba(212, 175, 55, 0.35) 0%, 
+        rgba(231, 186, 39, 0.35) 0%, 
         rgba(248, 228, 90, 0.18) 100%);
     box-shadow: 0 12px 48px rgba(212, 175, 55, 0.5);
     animation: stickPulse 2000ms var(--easing-smooth) forwards;
