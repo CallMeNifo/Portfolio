@@ -1590,3 +1590,47 @@ img {
                 box-shadow 600ms cubic-bezier(0.22, 1, 0.36, 1) !important;
 
 }
+/* ============================= */
+/* MOBILE / SMALL SCREEN BLOCKER */
+/* ============================= */
+
+.screen-blocker {
+    position: fixed;
+    inset: 0;
+    background: #0a0a0a;
+    color: #e2dfd6;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 999999;
+    text-align: center;
+}
+
+.screen-blocker-content h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+}
+
+.screen-blocker-content p {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.95rem;
+    opacity: 0.7;
+    letter-spacing: 0.05em;
+}
+
+/* ACTUAL BLOCK */
+@media (max-width: 1024px) {
+    body > *:not(.screen-blocker) {
+        display: none !important;
+    }
+
+    .screen-blocker {
+        display: flex;
+    }
+
+    html, body {
+        overflow: hidden;
+        cursor: default !important;
+    }
+}
