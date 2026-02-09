@@ -846,7 +846,7 @@ img {
     color: var(--text-tertiary);
 }
 
-/* Floating Elemens */
+/* Floating Elements */
 .floating-elements {
     position: absolute;
     right: 80px;
@@ -1544,4 +1544,48 @@ img {
     .process-step {
         padding: 40px 30px;
     }
+}
+/* ==========================================
+   CRITICAL FIX: Magnetic Effect Compatibility
+   ========================================== */
+
+/* Prevent transition conflicts with magnetic effect */
+[data-magnetic] {
+    will-change: transform;
+    transform-style: preserve-3d;
+    perspective: 1000px;
+}
+
+/* Remove conflicting transitions during interaction */
+[data-magnetic]:hover {
+    transition: height 600ms cubic-bezier(0.22, 1, 0.36, 1),
+                box-shadow 600ms cubic-bezier(0.22, 1, 0.36, 1),
+                border-color 600ms cubic-bezier(0.22, 1, 0.36, 1) !important;
+    /* Note: transform is intentionally excluded */
+}
+
+/* Project cards need special handling */
+.project-card {
+    transform-origin: center center;
+    backface-visibility: hidden;
+}
+
+.project-card:hover {
+    /* Only animate properties that don't conflict with JS transform */
+    transition: height var(--transition-medium) var(--easing-smooth),
+                box-shadow var(--transition-medium) var(--easing-smooth),
+                border-color var(--transition-medium) var(--easing-smooth) !important;
+}
+
+/* Process steps magnetic fix */
+.process-step:hover {
+    transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1),
+                border-color 600ms cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+/* Capability items magnetic fix */
+.capability-item:hover {
+    transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1),
+                border-color 600ms cubic-bezier(0.22, 1, 0.36, 1),
+                box-shadow 600ms cubic-bezier(0.22, 1, 0.36, 1) !important;
 }

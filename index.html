@@ -5,6 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nawaf M. Ashraff - Interactive Designer</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+    /* Critical inline styles to prevent FOUC and transition conflicts */
+    [data-magnetic] {
+        transform: translate3d(0, 0, 0);
+        will-change: transform;
+    }
+    
+    /* Ensure smooth rendering */
+    * {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+</style>
     <link rel ="icon" type="image/x-icon" href="Images/logo.png">
 </head>
 <body>
@@ -277,10 +290,10 @@
             <h2 class="section-title-small" data-reveal>What I Do</h2>
             <div class="capabilities-grid">
                 <div class="capability-item glass-soft" data-magnetic data-reveal>
-                    <span class="capability-text">Interaction Design</span>
+                <span class="capability-text">Interaction Design</span>
                 </div>
                 <div class="capability-item glass-soft" data-magnetic data-reveal>
-                    <span class="capability-text">Motion Design</span>
+                <span class="capability-text">Motion Design</span>
                 </div>
                 <div class="capability-item glass-soft" data-magnetic data-reveal>
                 <span class="capability-text">Photo Editing</span>
@@ -289,16 +302,16 @@
                 <span class="capability-text">Video Editing</span>
                 </div>
                 <div class="capability-item glass-soft" data-magnetic data-reveal>
-                    <span class="capability-text">UI Systems</span>
+                <span class="capability-text">UI Systems</span>
                 </div>
                 <div class="capability-item glass-soft" data-magnetic data-reveal>
-                    <span class="capability-text">Prototyping</span>
+                <span class="capability-text">Prototyping</span>
                 </div>
                 <div class="capability-item glass-soft" data-magnetic data-reveal>
-                    <span class="capability-text">Creative Coding</span>
+                <span class="capability-text">Creative Coding</span>
                 </div>
                 <div class="capability-item glass-soft" data-magnetic data-reveal>
-                    <span class="capability-text">Design Engineering</span>
+                <span class="capability-text">Design Engineering</span>
                 </div>
             </div>
         </div>

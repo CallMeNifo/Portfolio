@@ -1,4 +1,45 @@
+// ==========================================
+// CONFIGURATION & CONSTANTS
+// ==========================================
 
+const CONFIG = {
+    cursor: {
+        speed: 0.55,
+        labels: {
+            'project-card': 'VIEW',
+            'contact-email': 'EMAIL',
+            'contact-phone': 'CALL',
+            'process-step': 'PROCESS',
+            'capability-item': 'SKILL',
+            'default': 'OPEN'
+        }
+    },
+    magnetic: {
+        strength: 0.25,
+        cardTiltStrength: 3
+    },
+    parallax: {
+        speed: 0.035,
+        depth: 10
+    },
+    animations: {
+        intro: {
+            welcomeDelay: 500,
+            worldDelay: 2000,
+            elementsDelay: 2800,
+            exitDelay: 4200,
+            removeDelay: 5600
+        },
+        stagger: 80,
+        pulseMin: 1000,
+        pulseMax: 3000
+    }
+};
+
+const STATE = {
+    prefersReducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    isTouchDevice: 'ontouchstart' in window || navigator.maxTouchPoints > 0
+};
 
 // ==========================================
 // INTRO ANIMATION SEQUENCE
@@ -13,60 +54,58 @@ function initIntroSequence() {
     const logo = document.querySelector('.logo-container');
     const scrollProgress = document.querySelector('.scroll-progress');
     
-    // Step 1: Show "WELCOME TO"
-    setTimeout(() => {
-        introWelcome.classList.add('animate');
-    }, 500);
+    const { welcomeDelay, worldDelay, elementsDelay, exitDelay, removeDelay } = CONFIG.animations.intro;
     
-    // Step 2: Move "WELCOME TO" up and show "MY WORLD"
-    setTimeout(() => {
-        introWelcome.classList.add('move-up');
-        introWorld.classList.add('animate');
-    }, 2000);
+    setTimeout(() => introWelcome?.classList.add('animate'), welcomeDelay);
     
-    // Step 3: Wake abstract elements with stagger
+    setTimeout(() => {
+        introWelcome?.classList.add('move-up');
+        introWorld?.classList.add('animate');
+    }, worldDelay);
+    
     setTimeout(() => {
         abstractElements.forEach((el, i) => {
-            setTimeout(() => {
-                el.classList.add('wake');
-            }, i * 200);
+            setTimeout(() => el.classList.add('wake'), i * 200);
         });
-    }, 2800);
+    }, elementsDelay);
     
-    // Step 4: Exit intro and show main content
     setTimeout(() => {
-        introOverlay.classList.add('exit');
-        heroContent.classList.add('visible');
-        logo.classList.add('visible');
-        scrollProgress.classList.add('visible');
-    }, 4200);
+        introOverlay?.classList.add('exit');
+        heroContent?.classList.add('visible');
+        logo?.classList.add('visible');
+        scrollProgress?.classList.add('visible');
+    }, exitDelay);
     
-    // Step 5: Remove intro from DOM
     setTimeout(() => {
-        introOverlay.classList.add('hidden');
-    }, 5600);
+        introOverlay?.classList.add('hidden');
+    }, removeDelay);
 }
 
 // ==========================================
-// CUSTOM CURSOR SYSTEM - FAST & RESPONSIVE
+// CUSTOM CURSOR SYSTEM
 // ==========================================
 
 const cursor = {
-    dot: document.querySelector('.cursor-dot'),
-    ring: document.querySelector('.cursor-ring'),
-    label: document.querySelector('.cursor-label'),
-    container: document.querySelector('.cursor'),
-    
-    pos: { x: 0, y: 0 },
-    mouse: { x: 0, y: 0 },
-    speed: 0.55,
+    dot: null,
+    ring: null,
+    label: null,
+    container: null,
+    pos: { x: window.innerWidth / 2, y: window.innerHeight / 2 },
+    mouse: { x: window.innerWidth / 2, y: window.innerHeight / 2 },
     
     init() {
+        if (STATE.isTouchDevice) return;
+        
+        this.dot = document.querySelector('.cursor-dot');
+        this.ring = document.querySelector('.cursor-ring');
+        this.label = document.querySelector('.cursor-label');
+        this.container = document.querySelector('.cursor');
+        
+        if (!this.dot || !this.ring) return;
+        
         document.addEventListener('mousemove', (e) => {
             this.mouse.x = e.clientX;
             this.mouse.y = e.clientY;
-            
-            // Dot follows immediately
             this.dot.style.left = this.mouse.x + 'px';
             this.dot.style.top = this.mouse.y + 'px';
         });
@@ -76,16 +115,14 @@ const cursor = {
     },
     
     render() {
-          this.pos.x += (this.mouse.x - this.pos.x) * this.speed;
-          this.pos.y += (this.mouse.y - this.pos.y) * this.speed;
-
-          // use transform instead of left/top (smoother)
-          this.ring.style.transform = `translate3d(${this.pos.x}px, ${this.pos.y}px, 0) translate3d(-50%, -50%, 0)`;
-          this.label.style.transform = `translate3d(${this.pos.x}px, ${this.pos.y - 50}px, 0) translate3d(-50%, -50%, 0)`;
-
-          requestAnimationFrame(() => this.render());
+        this.pos.x += (this.mouse.x - this.pos.x) * CONFIG.cursor.speed;
+        this.pos.y += (this.mouse.y - this.pos.y) * CONFIG.cursor.speed;
+        
+        this.ring.style.transform = `translate3d(${this.pos.x}px, ${this.pos.y}px, 0) translate(-50%, -50%)`;
+        this.label.style.transform = `translate3d(${this.pos.x}px, ${this.pos.y - 50}px, 0) translate(-50%, -50%)`;
+        
+        requestAnimationFrame(() => this.render());
     },
-
     
     addHoverEffects() {
         const hoverTargets = document.querySelectorAll('a, .project-card, .process-step, .capability-item, [data-magnetic]');
@@ -93,16 +130,7 @@ const cursor = {
         hoverTargets.forEach(target => {
             target.addEventListener('mouseenter', () => {
                 this.container.classList.add('hover');
-                
-                // Set contextual labels
-                let label = '';
-                if (target.classList.contains('project-card')) label = 'VIEW';
-                else if (target.classList.contains('contact-email')) label = 'EMAIL';
-                else if (target.classList.contains('contact-phone')) label = 'CALL';
-                else if (target.classList.contains('process-step')) label = 'PROCESS';
-                else if (target.classList.contains('capability-item')) label = 'SKILL';
-                else if (target.tagName === 'A') label = 'OPEN';
-                
+                const label = this.getLabel(target);
                 if (label) {
                     this.label.textContent = label;
                     this.container.classList.add('show-label');
@@ -110,51 +138,80 @@ const cursor = {
             });
             
             target.addEventListener('mouseleave', () => {
-                this.container.classList.remove('hover');
-                this.container.classList.remove('show-label');
+                this.container.classList.remove('hover', 'show-label');
             });
         });
+    },
+    
+    getLabel(element) {
+        for (const [className, label] of Object.entries(CONFIG.cursor.labels)) {
+            if (className === 'default') continue;
+            if (element.classList.contains(className)) return label;
+        }
+        return element.tagName === 'A' ? CONFIG.cursor.labels.default : '';
     }
 };
 
 // ==========================================
-// MAGNETIC EFFECT
+// MAGNETIC EFFECT - FIXED FOR ALL CARDS
 // ==========================================
 
 function initMagneticEffect() {
     const magneticElements = document.querySelectorAll('[data-magnetic]');
     
     magneticElements.forEach(el => {
+        // CRITICAL FIX: Store original transition and temporarily disable it
+        const originalTransition = window.getComputedStyle(el).transition;
+        
+        el.addEventListener('mouseenter', () => {
+            // Disable CSS transitions during magnetic interaction
+            el.style.transition = 'none';
+        });
+        
         el.addEventListener('mousemove', (e) => {
             const rect = el.getBoundingClientRect();
             const x = e.clientX - rect.left - rect.width / 2;
             const y = e.clientY - rect.top - rect.height / 2;
             
-            const strength = parseFloat(getComputedStyle(document.documentElement)
-                .getPropertyValue('--magnetic-strength'));
+            const moveX = x * CONFIG.magnetic.strength;
+            const moveY = y * CONFIG.magnetic.strength;
             
-            const moveX = x * strength;
-            const moveY = y * strength;
-            
-            el.style.transform = `translate(${moveX}px, ${moveY}px)`;
+            // Special handling for project cards with 3D tilt
+            if (el.classList.contains('project-card')) {
+                const tiltX = ((e.clientX - rect.left) / rect.width - 0.5) * CONFIG.magnetic.cardTiltStrength;
+                const tiltY = ((e.clientY - rect.top) / rect.height - 0.5) * CONFIG.magnetic.cardTiltStrength;
+                
+                el.style.transform = `translate3d(${moveX}px, ${moveY}px, 0) rotateY(${tiltX}deg) rotateX(${-tiltY}deg)`;
+            } else {
+                el.style.transform = `translate3d(${moveX}px, ${moveY}px, 0)`;
+            }
         });
         
         el.addEventListener('mouseleave', () => {
+            // Re-enable transitions for smooth return
+            el.style.transition = originalTransition;
             el.style.transform = '';
+            
+            // Clear inline transition after animation completes
+            setTimeout(() => {
+                el.style.transition = '';
+            }, 600);
         });
     });
 }
 
 // ==========================================
-// PARALLAX LAYERS - SMOOTH RAF
+// PARALLAX LAYERS
 // ==========================================
 
 function initParallax() {
+    if (STATE.prefersReducedMotion) return;
+    
     const layers = document.querySelectorAll('.parallax-layer');
-    let mouseX = 0;
-    let mouseY = 0;
-    let currentX = 0;
-    let currentY = 0;
+    if (layers.length === 0) return;
+    
+    let mouseX = 0, mouseY = 0;
+    let currentX = 0, currentY = 0;
     
     document.addEventListener('mousemove', (e) => {
         mouseX = (e.clientX - window.innerWidth / 2) / window.innerWidth;
@@ -162,14 +219,14 @@ function initParallax() {
     });
     
     function animate() {
-        currentX += (mouseX - currentX) * 0.035;
-        currentY += (mouseY - currentY) * 0.035;
-
+        currentX += (mouseX - currentX) * CONFIG.parallax.speed;
+        currentY += (mouseY - currentY) * CONFIG.parallax.speed;
+        
         layers.forEach((layer, i) => {
-          const depth = (i + 1) * 10; // was 20, too much
-          const moveX = currentX * depth;
-          const moveY = currentY * depth;
-          layer.style.transform = `translate3d(${moveX}px, ${moveY}px, 0)`;
+            const depth = (i + 1) * CONFIG.parallax.depth;
+            const moveX = currentX * depth;
+            const moveY = currentY * depth;
+            layer.style.transform = `translate3d(${moveX}px, ${moveY}px, 0)`;
         });
         
         requestAnimationFrame(animate);
@@ -178,41 +235,26 @@ function initParallax() {
     animate();
 }
 
-const cards = document.querySelectorAll('.project-card');
-
-cards.forEach(card => {
-  card.addEventListener('mousemove', e => {
-    const rect = card.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width - 0.5;
-    const y = (e.clientY - rect.top) / rect.height - 0.5;
-
-    card.style.transform =
-      `translate3d(${x * 6}px, ${y * 6}px, 0) scale(1.02)`;
-  });
-
-  card.addEventListener('mouseleave', () => {
-    card.style.transform = 'translate3d(0,0,0))';
-  });
-});
-
-
 // ==========================================
-// SCROLL PROGRESS - SMOOTH UPDATE
+// SCROLL PROGRESS
 // ==========================================
+
+let scrollRAF = null;
 
 function updateScrollProgress() {
     const progressFill = document.querySelector('.progress-fill');
     const currentSection = document.querySelector('.current-section');
     
+    if (!progressFill || !currentSection) return;
+    
     const windowHeight = window.innerHeight;
     const documentHeight = document.documentElement.scrollHeight;
     const scrollTop = window.scrollY;
     const maxScroll = documentHeight - windowHeight;
-    const progress = (scrollTop / maxScroll) * 100;
+    const progress = Math.min((scrollTop / maxScroll) * 100, 100);
     
-    progressFill.style.height = Math.min(progress, 100) + '%';
+    progressFill.style.height = progress + '%';
     
-    // Update section counter
     const sections = document.querySelectorAll('.section');
     sections.forEach((section, i) => {
         const rect = section.getBoundingClientRect();
@@ -222,8 +264,16 @@ function updateScrollProgress() {
     });
 }
 
+function handleScroll() {
+    if (scrollRAF) return;
+    scrollRAF = requestAnimationFrame(() => {
+        updateScrollProgress();
+        scrollRAF = null;
+    });
+}
+
 // ==========================================
-// SCROLL REVEAL - STAGGERED
+// SCROLL REVEAL
 // ==========================================
 
 function initScrollReveal() {
@@ -233,12 +283,9 @@ function initScrollReveal() {
     };
     
     const observer = new IntersectionObserver((entries) => {
-        entries.forEach((entry, index) => {
-            if (entry.isIntersecting) {
-                // Add stagger delay if multiple elements
-                setTimeout(() => {
-                    entry.target.classList.add('visible');
-                }, index * 80);
+        entries.forEach((entry) => {
+            if (entry.isIntersecting && !entry.target.classList.contains('visible')) {
+                entry.target.classList.add('visible');
             }
         });
     }, observerOptions);
@@ -249,11 +296,14 @@ function initScrollReveal() {
 }
 
 // ==========================================
-// FLOATING STICKS PULSE - RANDOM
+// FLOATING STICKS PULSE
 // ==========================================
 
 function initSticksPulse() {
+    if (STATE.prefersReducedMotion) return;
+    
     const sticks = document.querySelectorAll('.stick');
+    if (sticks.length === 0) return;
     
     function randomPulse() {
         const randomStick = sticks[Math.floor(Math.random() * sticks.length)];
@@ -263,8 +313,7 @@ function initSticksPulse() {
             randomStick.classList.remove('pulse');
         }, 1000);
         
-        // Next pulse at random interval
-        const nextDelay = 1000 + Math.random() * 2000;
+        const nextDelay = CONFIG.animations.pulseMin + Math.random() * (CONFIG.animations.pulseMax - CONFIG.animations.pulseMin);
         setTimeout(randomPulse, nextDelay);
     }
     
@@ -272,66 +321,124 @@ function initSticksPulse() {
 }
 
 // ==========================================
+// CLICK FEEDBACK
+// ==========================================
+
+function initClickFeedback() {
+    document.addEventListener('mousedown', (e) => {
+        const target = e.target.closest('.project-card, .process-step, .capability-item, .glass, .glass-soft');
+        if (!target) return;
+        
+        target.style.transition = 'transform 0.15s cubic-bezier(0.22, 1, 0.36, 1)';
+        const currentTransform = target.style.transform || '';
+        
+        // Add scale without disrupting magnetic transform
+        if (currentTransform) {
+            target.style.transform = currentTransform + ' scale(0.97)';
+        } else {
+            target.style.transform = 'scale(0.97)';
+        }
+        
+        setTimeout(() => {
+            target.style.transform = currentTransform;
+            setTimeout(() => {
+                target.style.transition = '';
+            }, 150);
+        }, 150);
+    });
+}
+
+// ==========================================
+// PREVENT UNWANTED INTERACTIONS
+// ==========================================
+
+function preventUnwantedInteractions() {
+    // Context menu
+    document.addEventListener('contextmenu', (e) => e.preventDefault());
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+        if (e.ctrlKey || e.metaKey) {
+            if (['s', 'p', 'f'].includes(e.key.toLowerCase())) {
+                e.preventDefault();
+            }
+        }
+    });
+}
+
+// ==========================================
+// PERFORMANCE OPTIMIZATIONS
+// ==========================================
+
+function optimizePerformance() {
+    // Add will-change to animated elements
+    const animatedElements = document.querySelectorAll('[data-magnetic], .parallax-layer, .cursor-ring');
+    animatedElements.forEach(el => {
+        el.style.willChange = 'transform';
+    });
+    
+    // Remove will-change after animations settle
+    setTimeout(() => {
+        animatedElements.forEach(el => {
+            el.style.willChange = 'auto';
+        });
+    }, 10000);
+}
+
+// ==========================================
 // INITIALIZE EVERYTHING
 // ==========================================
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Start intro sequence
-    initIntroSequence();
-    
-    // Initialize cursor - fast and responsive
-    cursor.init();
-    
-    // Initialize magnetic effect
-    initMagneticEffect();
-    
-    // Initialize parallax
-    initParallax();
-    
-    // Setup scroll progress
-    window.addEventListener('scroll', updateScrollProgress);
-    updateScrollProgress();
-    
-    // Setup scroll reveal with stagger
-    initScrollReveal();
-    
-    // Initialize sticks pulse
-    initSticksPulse();
-});
-
-// ==========================================
-// CLICK FEEDBACK MICRO-INTERACTION
-// ==========================================
-
-document.addEventListener('mousedown', (e) => {
-    const target = e.target.closest('.project-card, .process-step, .capability-item, .glass, .glass-soft');
-    if (target) {
-        const originalTransform = target.style.transform;
-        target.style.transform = originalTransform + ' scale(0.97)';
+function init() {
+    try {
+        // Core animations
+        initIntroSequence();
         
-        setTimeout(() => {
-            target.style.transform = originalTransform;
-        }, 200);
-    }
-});
-
-// ==========================================
-// KEYBOARD SHORTCUTS PREVENTION
-// ==========================================
-
-document.addEventListener('keydown', (e) => {
-    // Prevent common browser shortcuts
-    if (e.ctrlKey || e.metaKey) {
-        if (['s', 'p', 'f'].includes(e.key.toLowerCase())) {
-            e.preventDefault();
+        // Interactive elements
+        if (!STATE.isTouchDevice) {
+            cursor.init();
         }
+        
+        // CRITICAL: Initialize magnetic AFTER a small delay to ensure CSS is loaded
+        setTimeout(() => {
+            initMagneticEffect();
+        }, 100);
+        
+        if (!STATE.prefersReducedMotion) {
+            initParallax();
+            initSticksPulse();
+        }
+        
+        // Scroll interactions
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        updateScrollProgress();
+        initScrollReveal();
+        
+        // User interactions
+        initClickFeedback();
+        preventUnwantedInteractions();
+        
+        // Performance
+        optimizePerformance();
+        
+    } catch (error) {
+        console.error('Initialization error:', error);
     }
-});
+}
 
-// ==========================================
-// CONTEXT MENU PREVENTION
-// ==========================================
+// Start when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
 
-document.addEventListener('contextmenu', (e) => {
-    e.preventDefault();
+// Handle visibility changes for performance
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        // Pause heavy animations when tab is hidden
+        document.body.style.setProperty('--reduced-motion', '1');
+    } else {
+        document.body.style.removeProperty('--reduced-motion');
+    }
 });
